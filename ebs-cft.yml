@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template creates elastic beanstalk environment for node application.
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Provide Environment Name where you want to deploy the stack.
+    Default: dev
+
+Resources:
+# Creates application for node deployment
+  NodeApplication:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      Description: AWS Elastic Beanstalk Node Application
+      ApplicationName: !Sub node-${Environment}-app
+
+# Creates configuration template for node application
+  NodeConfigurationTemplate:
+    Type: AWS::ElasticBeanstalk::ConfigurationTemplate
+    Properties:
+      ApplicationName:
+        !Ref NodeApplication
+      Description: AWS ElasticBeanstalk Node Configuration Template
+      OptionSettings:
+      - Namespace: aws:autoscaling:asg
+        OptionName: MinSize
+        Value: '1'
+      - Namespace: aws:autoscaling:asg
+        OptionName: MaxSize
+        Value: '2'
+      - Namespace: aws:elasticbeanstalk:environment
+        OptionName: EnvironmentType
+        Value: LoadBalanced
+      - Namespace: aws:autoscaling:launchconfiguration
+        OptionName: IamInstanceProfile
+        Value: aws-elasticbeanstalk-ec2-role        
+      SolutionStackName: "64bit Amazon Linux 2 v5.8.1 running Node.js 18"
+
+# Creates elastic beanstalk environment for node application
+  NodeEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment    
+    Properties:
+      EnvironmentName: !Sub node-${Environment}-app-env
+      ApplicationName:
+        !Ref NodeApplication
+      Description: AWS ElasticBeanstalk Node Environment
+      TemplateName:
+        !Ref NodeConfigurationTemplate
+      
